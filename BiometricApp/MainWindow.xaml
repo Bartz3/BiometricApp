@@ -1,0 +1,80 @@
+﻿<Window x:Class="BiometricApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Image Processing App" Height="600" Width="800">
+    <Grid>
+        <!-- Menu bar -->
+        <Menu>
+            <MenuItem Header="Plik">
+                <MenuItem Header="Otwórz" Click="OpenImage"/>
+                <MenuItem Header="Zapisz" Click="SaveImage"/>
+                <Separator/>
+                <MenuItem Header="Wyjdź"/>
+            </MenuItem>
+            <MenuItem Header="Edytuj">
+                <MenuItem Header="Binaryzacja"/>
+            </MenuItem>
+
+        </Menu>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Grid ze zdjęciami -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Oryginalne zdjęcie -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition ></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Margin="20" HorizontalAlignment="Center">Obraz</Label>
+                    <Image Grid.Row="1" x:Name="OriginalImage" Margin="20" Stretch="Uniform" />
+                </Grid>
+
+                <!-- Przerwa -->
+                <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="5" />
+
+                <!-- Zdjęcie przerobione -->
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition ></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Margin="20" HorizontalAlignment="Center">Obraz po przetworzeniu</Label>
+                    <Image Grid.Row="1" x:Name="ProcessedImage" Margin="20" Stretch="Uniform" />
+                </Grid>
+            </Grid>
+
+            <!-- Dolny Grid z suwakiem -->
+            <Grid Grid.Row="1" Margin="0 10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                    <RadioButton Name="RedChannelRadioButton"   Margin="0 0 5 0" Content="Red"></RadioButton>
+                    <RadioButton Name="GreenChannelRadioButton" Margin="0 0 5 0" Content="Green"></RadioButton>
+                    <RadioButton Name="BlueChannelRadioButton"  Margin="0 0 5 0" Content="Blue"></RadioButton>
+                    <RadioButton Name="MeanChannelRadioButton"  Margin="0 0 5 0" Content="Mean" IsChecked="true"></RadioButton>
+                </WrapPanel>
+                <TextBlock Grid.Column="1" Text="Threshold level" VerticalAlignment="Center" Margin="0 0 10 0" />
+                <Slider Name="appSlider" Grid.Column="2" Minimum="0" Maximum="255" Margin="10 0 0 0" ValueChanged="OnThresholdValueChanged" AutoToolTipPlacement="TopLeft"/>
+                <Button Grid.Column="3" Content="Histogram" HorizontalAlignment="Left" Margin="10,0,0,0" Click="ShowHistogram" Height="20" VerticalAlignment="Top" />
+            </Grid>
+
+        </Grid>
+    </Grid>
+
+</Window>

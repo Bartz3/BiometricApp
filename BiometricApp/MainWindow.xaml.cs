@@ -1,7 +1,4 @@
 ﻿using Microsoft.Win32;
-using OxyPlot.Wpf;
-using OxyPlot;
-using OxyPlot.Series;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,6 +11,11 @@ using System.Text;
 using System.Windows.Controls;
 using System.Windows.Shapes;
 using System.Windows.Controls.Primitives;
+using ScottPlot.WPF;
+using ScottPlot.WinForms;
+using ScottPlot;
+using ScottPlot.Drawing.Colormaps;
+using ScottPlot.Renderable;
 
 namespace BiometricApp
 {
@@ -63,6 +65,14 @@ namespace BiometricApp
                 }
             }
         }
+        private void ShowBinaryMenu_Click(object sender, RoutedEventArgs e)
+        {
+            BinaryGrid.Visibility = Visibility.Visible;
+            //foreach(var item in optionsGrid.Children)
+            //{
+            //    item
+            //}
+        }
 
         private void OnThresholdValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -78,7 +88,7 @@ namespace BiometricApp
                 bool useRedChannel = RedChannelRadioButton.IsChecked ?? false;
                 bool useGreenChannel = GreenChannelRadioButton.IsChecked ?? false;
                 bool useBlueChannel = BlueChannelRadioButton.IsChecked ?? false;
-                bool meanBlueChannel = MeanChannelRadioButton.IsChecked ?? false;
+                bool grayscaleChannel = GrayscaleChannelRadioButton.IsChecked ?? false;
 
                 for (int i = 0; i < pixels.Length; i += 4)
                 {
@@ -87,19 +97,22 @@ namespace BiometricApp
                     if (useRedChannel)
                     {
                         pixels[i] = (gray > thresholdValue) ? (byte)255 : (byte)0;
-                       
+                        pixels[i + 1] = pixels[i+2] = thresholdValue;
                     }
 
                     if (useGreenChannel)
                     {
+
                         pixels[i + 1] = (gray > thresholdValue) ? (byte)255 : (byte)0;
+                        pixels[i + 2] = pixels[i] = thresholdValue;
                     }
 
                     if (useBlueChannel)
                     {
                         pixels[i + 2] = (gray > thresholdValue) ? (byte)255 : (byte)0;
+                        pixels[i + 1] = pixels[i] = thresholdValue;
                     }
-                    if (meanBlueChannel)
+                    if (grayscaleChannel)
                     {
                         byte r = pixels[i + 0];
                         byte g = pixels[i + 1];
@@ -155,9 +168,9 @@ namespace BiometricApp
                 bool useRedChannel = RedChannelRadioButton.IsChecked ?? false;
                 bool useGreenChannel = GreenChannelRadioButton.IsChecked ?? false;
                 bool useBlueChannel = BlueChannelRadioButton.IsChecked ?? false;
-                bool meanBlueChannel = MeanChannelRadioButton.IsChecked ?? false;
+                bool grayscaleChannel = GrayscaleChannelRadioButton.IsChecked ?? false;
 
-                int[] histogramData = new int[256];
+                double[] histogramData = new double[256];
                 int channelHistogram;
                 for (int i = 0; i < pixels.Length; i += 4)
                 {
@@ -180,7 +193,7 @@ namespace BiometricApp
                         
                     }
 
-                    if (meanBlueChannel)
+                    if (grayscaleChannel)
                     {
                         byte r = pixels[i + 0];
                         byte g = pixels[i + 1];
@@ -206,12 +219,24 @@ namespace BiometricApp
                     histogramBuilder.AppendFormat("{0}: {1} ", i, histogramData[i]);
                 }
 
-                // show histogram in new window
-                Window window = new Window();
-                window.Content = histogramBuilder.ToString();
-                window.ShowDialog();
+                // Tworzymy wykres histogramu
+                var plt = new Plot(600, 400);
+                plt.Title("Histogram");
 
+                // Dodajemy dane do wykresu
+                var barPlot = plt.AddBar(histogramData);
 
+                // Konfigurujemy osie wykresu
+                plt.YLabel("Liczba pikseli");
+                plt.XLabel("Wartość piksela");
+                //plt.GetAxisLimits(152);
+         
+
+                // Tworzymy nowe okno z wykresem
+                var plotWindow = new Window();
+                plotWindow.Content =  new FormsPlotWpf(plt);
+                plotWindow.Show();
+                
                 //PlotModel histogramPlot = new PlotModel();
 
                 ////create histogram series
@@ -244,6 +269,8 @@ namespace BiometricApp
 
             }
         }
+
+ 
         public void DisplayHistogram(int[] data)
         {
             // Ustawienie wymiarów okna

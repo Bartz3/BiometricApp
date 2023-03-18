@@ -12,7 +12,7 @@
                 <MenuItem Header="Wyjdź"/>
             </MenuItem>
             <MenuItem Header="Edytuj">
-                <MenuItem Header="Binaryzacja"/>
+                <MenuItem Header="Binaryzacja" Click="ShowBinaryMenu_Click"/>
             </MenuItem>
 
         </Menu>
@@ -56,22 +56,26 @@
             </Grid>
 
             <!-- Dolny Grid z suwakiem -->
-            <Grid Grid.Row="1" Margin="0 10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto"></ColumnDefinition>
-                    <ColumnDefinition Width="auto"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                    <ColumnDefinition Width="auto"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                <WrapPanel Grid.Column="0" VerticalAlignment="Center">
-                    <RadioButton Name="RedChannelRadioButton"   Margin="0 0 5 0" Content="Red"></RadioButton>
-                    <RadioButton Name="GreenChannelRadioButton" Margin="0 0 5 0" Content="Green"></RadioButton>
-                    <RadioButton Name="BlueChannelRadioButton"  Margin="0 0 5 0" Content="Blue"></RadioButton>
-                    <RadioButton Name="MeanChannelRadioButton"  Margin="0 0 5 0" Content="Mean" IsChecked="true"></RadioButton>
-                </WrapPanel>
-                <TextBlock Grid.Column="1" Text="Threshold level" VerticalAlignment="Center" Margin="0 0 10 0" />
-                <Slider Name="appSlider" Grid.Column="2" Minimum="0" Maximum="255" Margin="10 0 0 0" ValueChanged="OnThresholdValueChanged" AutoToolTipPlacement="TopLeft"/>
-                <Button Grid.Column="3" Content="Histogram" HorizontalAlignment="Left" Margin="10,0,0,0" Click="ShowHistogram" Height="20" VerticalAlignment="Top" />
+            <Grid x:Name="optionsGrid" Grid.Row="1">
+              
+                <Grid x:Name="BinaryGrid" Margin="0 10" Visibility="Hidden">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                        <RadioButton Name="RedChannelRadioButton"   Margin="0 0 5 0" Content="Blue"></RadioButton>
+                        <RadioButton Name="GreenChannelRadioButton" Margin="0 0 5 0" Content="Green"></RadioButton>
+                        <RadioButton Name="BlueChannelRadioButton"  Margin="0 0 5 0" Content="Red"></RadioButton>
+                        <RadioButton Name="GrayscaleChannelRadioButton"  Margin="0 0 5 0" Content="Grayscale" IsChecked="true"></RadioButton>
+                    </WrapPanel>
+                    <TextBlock Grid.Column="1" Text="Threshold level" VerticalAlignment="Center" Margin="0 0 10 0" />
+                    <Slider Name="appSlider" Grid.Column="2" Minimum="0" Maximum="255" Margin="10 0 0 0" ValueChanged="OnThresholdValueChanged" AutoToolTipPlacement="TopLeft"/>
+                    <Button Grid.Column="3" Content="Histogram" HorizontalAlignment="Left" Margin="10,0,0,0" Click="ShowHistogram" Height="20" VerticalAlignment="Top" />
+                </Grid>
+
             </Grid>
 
         </Grid>

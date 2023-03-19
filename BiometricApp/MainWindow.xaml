@@ -14,6 +14,13 @@
             <MenuItem Header="Edytuj">
                 <MenuItem Header="Binaryzacja" Click="ShowBinaryMenu_Click"/>
             </MenuItem>
+            <MenuItem Header="Histogram">
+                <MenuItem Header="Rozciąganie histogramu" Click="StreatchHistogram"></MenuItem>
+                <MenuItem Header="Wyrównywanie histogramu" Click="EqualizeHistogram"></MenuItem>
+                <MenuItem Header="Binaryzacja Otsu" Click="OtsuBinarization"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Resetuj" Click="ResetImage">
+            </MenuItem>
 
         </Menu>
 
@@ -38,7 +45,7 @@
                         <RowDefinition ></RowDefinition>
                     </Grid.RowDefinitions>
                     <Label Grid.Row="0" Margin="20" HorizontalAlignment="Center">Obraz</Label>
-                    <Image Grid.Row="1" x:Name="OriginalImage" Margin="20" Stretch="Uniform" />
+                    <Image Grid.Row="1" x:Name="MainImage" Margin="20" Stretch="Uniform" />
                 </Grid>
 
                 <!-- Przerwa -->
@@ -50,7 +57,7 @@
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition ></RowDefinition>
                     </Grid.RowDefinitions>
-                    <Label Grid.Row="0" Margin="20" HorizontalAlignment="Center">Obraz po przetworzeniu</Label>
+                    <Label Grid.Row="0" Margin="20" HorizontalAlignment="Center">Histogram</Label>
                     <Image Grid.Row="1" x:Name="ProcessedImage" Margin="20" Stretch="Uniform" />
                 </Grid>
             </Grid>
@@ -58,7 +65,7 @@
             <!-- Dolny Grid z suwakiem -->
             <Grid x:Name="optionsGrid" Grid.Row="1">
               
-                <Grid x:Name="BinaryGrid" Margin="0 10" Visibility="Hidden">
+                <Grid x:Name="BinaryGrid" Margin="0 10" Visibility="Visible">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="auto"></ColumnDefinition>

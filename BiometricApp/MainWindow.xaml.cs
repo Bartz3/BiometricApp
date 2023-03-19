@@ -1,21 +1,17 @@
 ﻿using Microsoft.Win32;
+using OxyPlot;
+using OxyPlot.Wpf;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Text;
 using System.Windows.Controls;
-using System.Windows.Shapes;
-using System.Windows.Controls.Primitives;
-using ScottPlot.WPF;
-using ScottPlot.WinForms;
-using ScottPlot;
-using ScottPlot.Drawing.Colormaps;
-using ScottPlot.Renderable;
+
 
 namespace BiometricApp
 {
@@ -25,45 +21,42 @@ namespace BiometricApp
     public partial class MainWindow : Window
     {
 
+
+        public ImageSource defaultImage { get; set; }
+
+        public Bitmap bitmap { get; set; }
         public MainWindow()
         {
             InitializeComponent();
+
+            BitmapImage bitmapImage = new BitmapImage(new Uri(@"D:\repos\BiometricApp\BiometricApp\Resources\Lenna.png"));
+
+            bitmap =HelperMethods.BitmapImageToBitmap(bitmapImage);
+
+            MainImage.Source = bitmapImage;
+            defaultImage = bitmapImage;
+            
         }
 
-
-        public Bitmap Image { get; set; }
-        public Bitmap ImageChanged { get; set; }
-        //int[] histogram = null;
-
-        private void OpenImage(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Image files (*.bmp, *.jpg, *.png)|*.bmp;*.jpg;*.png|All files (*.*)|*.*";
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                OriginalImage.Source = new BitmapImage(new Uri(openFileDialog.FileName));
-                ProcessedImage.Source = new BitmapImage(new Uri(openFileDialog.FileName));
-            }
-        }
 
         private void SaveImage(object sender, RoutedEventArgs e)
         {
-
-            if (ProcessedImage.Source != null)
+         
+            if (MainImage.Source != null)
             {
                 var saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Filter = "PNG Image|*.png";
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     var encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create((BitmapSource)ProcessedImage.Source));
+                    encoder.Frames.Add(BitmapFrame.Create((BitmapSource)MainImage.Source));
                     using (var fileStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
                     {
                         encoder.Save(fileStream);
                     }
                 }
             }
+
         }
         private void ShowBinaryMenu_Click(object sender, RoutedEventArgs e)
         {
@@ -74,12 +67,25 @@ namespace BiometricApp
             //}
         }
 
+        private void OpenImage(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Image files (*.bmp, *.jpg, *.png)|*.bmp;*.jpg;*.png|All files (*.*)|*.*";
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                //bitmap= new Bitmap(openFileDialog.FileName);
+                MainImage.Source = new BitmapImage(new Uri(openFileDialog.FileName));
+                defaultImage = MainImage.Source;
+            }
+        }
+
         private void OnThresholdValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (OriginalImage.Source != null)
+            if (MainImage.Source != null)
             {
-                BitmapImage bitmapImage = (BitmapImage)OriginalImage.Source;
-                FormatConvertedBitmap formatConvertedBitmap = new FormatConvertedBitmap(bitmapImage, PixelFormats.Pbgra32, null, 0);
+                BitmapSource bitmapSource = (BitmapSource)MainImage.Source;
+                FormatConvertedBitmap formatConvertedBitmap = new FormatConvertedBitmap(bitmapSource, PixelFormats.Pbgra32, null, 0);
 
                 byte thresholdValue = (byte)e.NewValue;
                 byte[] pixels = new byte[formatConvertedBitmap.PixelWidth * formatConvertedBitmap.PixelHeight * 4];
@@ -97,7 +103,7 @@ namespace BiometricApp
                     if (useRedChannel)
                     {
                         pixels[i] = (gray > thresholdValue) ? (byte)255 : (byte)0;
-                        pixels[i + 1] = pixels[i+2] = thresholdValue;
+                        pixels[i + 1] = pixels[i + 2] = thresholdValue;
                     }
 
                     if (useGreenChannel)
@@ -129,8 +135,9 @@ namespace BiometricApp
                     pixels[i + 3] = 255; // Alpha channel
                 }
 
-                BitmapSource bitmapSource = BitmapSource.Create(formatConvertedBitmap.PixelWidth, formatConvertedBitmap.PixelHeight, 96, 96, PixelFormats.Pbgra32, null, pixels, formatConvertedBitmap.PixelWidth * 4);
-                ProcessedImage.Source = bitmapSource;
+
+                BitmapSource bitmapSource2 = BitmapSource.Create(formatConvertedBitmap.PixelWidth, formatConvertedBitmap.PixelHeight, 96, 96, PixelFormats.Pbgra32, null, pixels, formatConvertedBitmap.PixelWidth * 4);
+                ProcessedImage.Source = bitmapSource2;
             }
         }
 
@@ -155,11 +162,18 @@ namespace BiometricApp
             return histogram;
         }
 
+   
+
+        private void ResetImage(object sender, RoutedEventArgs e)
+        {
+            ProcessedImage.Source = defaultImage;
+        }
+
         private void ShowHistogram(object sender, RoutedEventArgs e)
         {
-            if (OriginalImage.Source != null)
+            if (MainImage.Source != null)
             {
-                BitmapImage bitmapImage = (BitmapImage)OriginalImage.Source;
+                BitmapImage bitmapImage = (BitmapImage)MainImage.Source;
                 FormatConvertedBitmap formatConvertedBitmap = new FormatConvertedBitmap(bitmapImage, PixelFormats.Pbgra32, null, 0);
 
                 byte[] pixels = new byte[formatConvertedBitmap.PixelWidth * formatConvertedBitmap.PixelHeight * 4];
@@ -171,7 +185,7 @@ namespace BiometricApp
                 bool grayscaleChannel = GrayscaleChannelRadioButton.IsChecked ?? false;
 
                 double[] histogramData = new double[256];
-                int channelHistogram;
+
                 for (int i = 0; i < pixels.Length; i += 4)
                 {
                     byte channelValue = 0;
@@ -219,86 +233,73 @@ namespace BiometricApp
                     histogramBuilder.AppendFormat("{0}: {1} ", i, histogramData[i]);
                 }
 
-                // Tworzymy wykres histogramu
-                var plt = new Plot(600, 400);
-                plt.Title("Histogram");
-
-                // Dodajemy dane do wykresu
-                var barPlot = plt.AddBar(histogramData);
-
-                // Konfigurujemy osie wykresu
-                plt.YLabel("Liczba pikseli");
-                plt.XLabel("Wartość piksela");
-                //plt.GetAxisLimits(152);
-         
-
-                // Tworzymy nowe okno z wykresem
-                var plotWindow = new Window();
-                plotWindow.Content =  new FormsPlotWpf(plt);
-                plotWindow.Show();
-                
-                //PlotModel histogramPlot = new PlotModel();
-
-                ////create histogram series
-                ////create histogram series
-                //HistogramSeries histogramSeries = new HistogramSeries();
-                //histogramSeries.ItemsSource = histogramData;
-                //histogramSeries.StrokeThickness = 1;
-                //histogramSeries.StrokeColor = OxyColors.Blue;
-                //histogramSeries.Title = "Histogram";
-
-                //// create new window
-                //Window histogramWindow = new Window();
-                //histogramWindow.Title = "Histogram";
-                //histogramWindow.Width = 800;
-                //histogramWindow.Height = 600;
-
-                //// create plot model and add histogram series
-                //PlotModel plotModel = new PlotModel();
-                //plotModel.Series.Add(histogramSeries);
-
-                //// create plot view and set plot model
-                //PlotView plotView = new PlotView();
-                //plotView.Model = plotModel;
-
-                //// add plot view to window content
-                //histogramWindow.Content = plotView;
-
-                //// show window
                 //histogramWindow.ShowDialog();
 
             }
         }
-
- 
-        public void DisplayHistogram(int[] data)
+        private void StreatchHistogram(object sender, RoutedEventArgs e)
         {
-            // Ustawienie wymiarów okna
-            Window histogramWindow = new Window();
-            histogramWindow.Width = 600;
-            histogramWindow.Height = 400;
+            Bitmap streachedBitmap = HistogramOperations.StretchingHistogram(bitmap);
 
-            // Utworzenie siatki w oknie
-            UniformGrid grid = new UniformGrid();
-            grid.Columns = data.Length;
-            grid.Rows = 1;
-            histogramWindow.Content = grid;
-
-            // Wyznaczenie największej wartości w tablicy danych
-            int maxData = data.Max();
-
-            // Wypełnienie siatki prostokątami
-            for (int i = 0; i < data.Length; i++)
+            using (MemoryStream memoryStream = new MemoryStream())
             {
-                var rect = new System.Windows.Shapes.Rectangle();
-                rect.Fill = System.Windows.Media.Brushes.Blue;
-                rect.Width = 20;
-                rect.Height = (data[i] * 300) / maxData;
-                grid.Children.Add(rect);
+                // Save the bitmap to the memory stream
+                streachedBitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Bmp);
+
+                // Create a new BitmapImage and set its source to the memory stream
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.StreamSource = memoryStream;
+                bitmapImage.EndInit();
+
+                // Convert the BitmapImage to a BitmapSource
+                ProcessedImage.Source = bitmapImage as BitmapSource;
+            }
+             
+        }
+        private void EqualizeHistogram(object sender, RoutedEventArgs e)
+        {
+            Bitmap streachedBitmap = HistogramOperations.HistogramEqualization(bitmap);
+
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                // Save the bitmap to the memory stream
+                streachedBitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Bmp);
+
+                // Create a new BitmapImage and set its source to the memory stream
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.StreamSource = memoryStream;
+                bitmapImage.EndInit();
+
+                // Convert the BitmapImage to a BitmapSource
+                ProcessedImage.Source = bitmapImage as BitmapSource;
             }
 
-            // Wyświetlenie okna
-            histogramWindow.ShowDialog();
+        }
+
+        private void OtsuBinarization(object sender, RoutedEventArgs e)
+        {
+            //Bitmap streachedBitmap = HistogramOperations.OtsuThreshold(bitmap);
+
+            //using (MemoryStream memoryStream = new MemoryStream())
+            //{
+            //    // Save the bitmap to the memory stream
+            //    streachedBitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Bmp);
+
+            //    // Create a new BitmapImage and set its source to the memory stream
+            //    BitmapImage bitmapImage = new BitmapImage();
+            //    bitmapImage.BeginInit();
+            //    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+            //    bitmapImage.StreamSource = memoryStream;
+            //    bitmapImage.EndInit();
+
+            //    // Convert the BitmapImage to a BitmapSource
+            //    ProcessedImage.Source = bitmapImage as BitmapSource;
+            //}
+
         }
 
 

@@ -11,7 +11,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Controls;
-
+using OxyPlot.Series;
 
 namespace BiometricApp
 {
@@ -29,7 +29,7 @@ namespace BiometricApp
         {
             InitializeComponent();
 
-            BitmapImage bitmapImage = new BitmapImage(new Uri(@"D:\repos\BiometricApp\BiometricApp\Resources\Lenna.png"));
+            BitmapImage bitmapImage = new BitmapImage(new Uri(@"D:\BiometricApp\BiometricApp\Resources\Lenna.png"));
 
             bitmap =HelperMethods.BitmapImageToBitmap(bitmapImage);
 
@@ -233,7 +233,48 @@ namespace BiometricApp
                     histogramBuilder.AppendFormat("{0}: {1} ", i, histogramData[i]);
                 }
 
-                //histogramWindow.ShowDialog();
+                //Window window = new Window();
+                //window.Content = histogramBuilder.ToString();
+                //window.ShowDialog();
+
+                PlotModel histogramPlot = new PlotModel();
+
+                //create histogram series
+                //create histogram series
+                HistogramSeries histogramSeries = new HistogramSeries();
+                //histogramSeries.XAxisKey = histogramData;
+                histogramSeries.ItemsSource = histogramData;
+                histogramSeries.StrokeThickness = 1;
+                histogramSeries.StrokeColor = OxyColors.Blue;
+                histogramSeries.Title = "Histogram";
+
+                // create new window
+                Window histogramWindow = new Window();
+                histogramWindow.Title = "Histogram";
+                histogramWindow.Width = 800;
+                histogramWindow.Height = 600;
+
+                // create plot model and add histogram series
+                PlotModel plotModel = new PlotModel();
+                plotModel.Series.Add(histogramSeries);
+
+                // create plot view and set plot model
+                PlotView plotView = new PlotView();
+                plotView.Model = plotModel;
+
+                // add plot view to window content
+                histogramWindow.Content = plotView;
+
+                // show window
+                double[] dataX = new double[256];
+                for (int i = 0; i < 256; i++)
+                {
+                    dataX[i] = i;
+                }
+
+                histogramWindow.ShowDialog();
+                WpfPlot1.Plot.AddScatter(dataX, histogramData);
+                WpfPlot1.Refresh();
 
             }
         }

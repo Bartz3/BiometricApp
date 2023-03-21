@@ -63,12 +63,12 @@
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition ></RowDefinition>
                     </Grid.RowDefinitions>
-                    <Label Grid.Row="0" Margin="20" HorizontalAlignment="Center">Histogram</Label>
+                    <Label Grid.Row="0" Margin="20" HorizontalAlignment="Center">Obraz po przerobieniu</Label>
                     <Image Grid.Row="1" x:Name="ProcessedImage" Margin="20" Stretch="Uniform" />
                 </Grid>
 
                 <Grid Grid.Column="3">
-                    <WpfPlot  Name="WpfPlot1" />
+                    <WpfPlot Name="MainChart" />
                 </Grid>
             </Grid>
 
@@ -85,6 +85,7 @@
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="*"></ColumnDefinition>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <WrapPanel Grid.Column="0" VerticalAlignment="Center">
                         <RadioButton Name="RedChannelRadioButton"   Margin="0 0 5 0" Content="Blue"></RadioButton>
@@ -95,6 +96,7 @@
                     <TextBlock Grid.Column="1" Text="Threshold level" VerticalAlignment="Center" Margin="0 0 10 0" />
                     <Slider Name="appSlider" Grid.Column="2" Minimum="0" Maximum="255" Margin="10 0 0 0" ValueChanged="OnThresholdValueChanged" AutoToolTipPlacement="TopLeft"/>
                     <Button Grid.Column="3" Content="Histogram" HorizontalAlignment="Left" Margin="10,0,0,0" Click="ShowHistogram" Height="20" VerticalAlignment="Top" />
+                    <Button Grid.Column="4" Content="Reset" HorizontalAlignment="Left" Margin="10,0,0,0" Click="ResetHistogram" Height="20" VerticalAlignment="Top" />
                 </Grid>
 
             </Grid>

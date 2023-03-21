@@ -113,92 +113,210 @@ namespace BiometricApp
             return image;
         }
 
-        public unsafe static Bitmap OtsuThreshold(Bitmap image)
+        //public unsafe static Bitmap OtsuThreshold(Bitmap image)
+        //{
+        //    // konwertujemy bitmapę do obrazu 24-bitowego
+        //    BitmapData bitmapData = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
+        //        ImageLockMode.ReadWrite, image.PixelFormat);
+
+        //    int pixelSize = Bitmap.GetPixelFormatSize(bitmapData.PixelFormat) / 8;
+        //    int heightInPixels = bitmapData.Height;
+        //    int widthInBytes = bitmapData.Width * pixelSize;
+        //    byte* ptrFirstPixel = (byte*)bitmapData.Scan0;
+
+        //    // tworzymy histogram
+        //    int[] histogram = new int[256];
+        //    for (int y = 0; y < heightInPixels; y++)
+        //    {
+        //        byte* currentLine = ptrFirstPixel + (y * bitmapData.Stride);
+        //        for (int x = 0; x < widthInBytes; x = x + pixelSize)
+        //        {
+        //            int pixelValue = currentLine[x];
+        //            histogram[pixelValue]++;
+        //        }
+        //    }
+
+        //    // obliczamy całkowitą liczbę pikseli
+        //    int totalPixels = widthInBytes * heightInPixels;
+
+        //    // inicjujemy wartości
+        //    double sum = 0;
+        //    for (int i = 0; i < 256; i++)
+        //    {
+        //        sum += i * histogram[i];
+        //    }
+        //    double sumB = 0;
+        //    int wB = 0;
+        //    int wF = 0;
+        //    double varMax = 0;
+        //    int threshold = 0;
+
+        //    // iterujemy po wartościach pikseli
+        //    for (int i = 0; i < 256; i++)
+        //    {
+        //        wB += histogram[i];
+        //        if (wB == 0)
+        //        {
+        //            continue;
+        //        }
+
+        //        wF = totalPixels - wB;
+        //        if (wF == 0)
+        //        {
+        //            break;
+        //        }
+
+        //        sumB += i * histogram[i];
+        //        double meanB = sumB / wB;
+        //        double meanF = (sum - sumB) / wF;
+
+        //        double varBetween = (double)wB * (double)wF * (meanB - meanF) * (meanB - meanF);
+
+        //        if (varBetween > varMax)
+        //        {
+        //            varMax = varBetween;
+        //            threshold = i;
+        //        }
+        //    }
+
+        //    // binaryzujemy obraz
+        //    for (int y = 0; y < heightInPixels; y++)
+        //    {
+        //        byte* currentLine = ptrFirstPixel + (y * bitmapData.Stride);
+        //        for (int x = 0; x < widthInBytes; x = x + pixelSize)
+        //        {
+        //            int pixelValue = currentLine[x];
+        //            byte newPixelValue = (byte)((pixelValue > threshold) ? 255 : 0);
+        //            currentLine[x] = newPixelValue;
+        //            currentLine[x + 1] = newPixelValue;
+        //            currentLine[x + 2] = newPixelValue;
+        //        }
+        //    }
+
+        //    // zwalniamy zasoby
+        //    image.UnlockBits(bitmapData);
+
+        //    return image;
+        //}
+        public static Bitmap OtsuThreshold(Bitmap image)
         {
-            // konwertujemy bitmapę do obrazu 24-bitowego
-            BitmapData bitmapData = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
-                ImageLockMode.ReadWrite, image.PixelFormat);
+            // Konwertuj bitmapę na obraz w skali szarości
+            Bitmap grayImage = ToGrayscale(image);
 
-            int pixelSize = Bitmap.GetPixelFormatSize(bitmapData.PixelFormat) / 8;
-            int heightInPixels = bitmapData.Height;
-            int widthInBytes = bitmapData.Width * pixelSize;
-            byte* ptrFirstPixel = (byte*)bitmapData.Scan0;
+            // Zainicjuj histogram pikseli
+            int[] histogram = Histogram(grayImage);
 
-            // tworzymy histogram
-            int[] histogram = new int[256];
-            for (int y = 0; y < heightInPixels; y++)
+            // Oblicz rozmiar obrazu
+            int totalPixels = grayImage.Width * grayImage.Height;
+
+            // Oblicz wartość progową za pomocą algorytmu Otsu
+            int threshold = ComputeThreshold(histogram, totalPixels);
+
+            // Stwórz bitmapę wynikową
+            Bitmap result = new Bitmap(grayImage.Width, grayImage.Height);
+
+            // Przeprowadź binaryzację za pomocą wartości progowej
+            for (int x = 0; x < grayImage.Width; x++)
             {
-                byte* currentLine = ptrFirstPixel + (y * bitmapData.Stride);
-                for (int x = 0; x < widthInBytes; x = x + pixelSize)
+                for (int y = 0; y < grayImage.Height; y++)
                 {
-                    int pixelValue = currentLine[x];
-                    histogram[pixelValue]++;
+                    Color pixelColor = grayImage.GetPixel(x, y);
+                    int grayValue = pixelColor.R;
+
+                    // Jeśli wartość piksela jest mniejsza niż próg, ustaw na czarno, w przeciwnym przypadku ustaw na biało
+                    if (grayValue < threshold)
+                    {
+                        result.SetPixel(x, y, Color.Black);
+                    }
+                    else
+                    {
+                        result.SetPixel(x, y, Color.White);
+                    }
                 }
             }
 
-            // obliczamy całkowitą liczbę pikseli
-            int totalPixels = widthInBytes * heightInPixels;
+            return result;
+        }
 
-            // inicjujemy wartości
+        // Funkcja pomocnicza do konwersji bitmapy na obraz w skali szarości
+        private static Bitmap ToGrayscale(Bitmap image)
+        {
+            Bitmap grayImage = new Bitmap(image.Width, image.Height);
+
+            for (int x = 0; x < image.Width; x++)
+            {
+                for (int y = 0; y < image.Height; y++)
+                {
+                    Color pixelColor = image.GetPixel(x, y);
+
+                    int grayValue = (int)((pixelColor.R * 0.3) + (pixelColor.G * 0.59) + (pixelColor.B * 0.11));
+
+                    grayImage.SetPixel(x, y, Color.FromArgb(grayValue, grayValue, grayValue));
+                }
+            }
+
+            return grayImage;
+        }
+
+        // Funkcja pomocnicza do obliczenia histogramu pikseli
+        private static int[] Histogram(Bitmap image)
+        {
+            int[] histogram = new int[256];
+
+            for (int x = 0; x < image.Width; x++)
+            {
+                for (int y = 0; y < image.Height; y++)
+                {
+                    Color pixelColor = image.GetPixel(x, y);
+                    int grayValue = pixelColor.R;
+                    histogram[grayValue]++;
+                }
+            }
+
+            return histogram;
+        }
+
+        // Funkcja pomocnicza do obliczenia wartości progu algorytmem Otsu
+        private static int ComputeThreshold(int[] histogram, int totalPixels)
+        {
             double sum = 0;
             for (int i = 0; i < 256; i++)
             {
                 sum += i * histogram[i];
             }
+
             double sumB = 0;
             int wB = 0;
             int wF = 0;
-            double varMax = 0;
+
+            double maxVariance = 0;
             int threshold = 0;
 
-            // iterujemy po wartościach pikseli
             for (int i = 0; i < 256; i++)
             {
                 wB += histogram[i];
-                if (wB == 0)
-                {
-                    continue;
-                }
+                if (wB == 0) continue;
 
                 wF = totalPixels - wB;
-                if (wF == 0)
-                {
-                    break;
-                }
+                if (wF == 0) break;
 
                 sumB += i * histogram[i];
-                double meanB = sumB / wB;
-                double meanF = (sum - sumB) / wF;
+                double mB = sumB / wB;
+                double mF = (sum - sumB) / wF;
 
-                double varBetween = (double)wB * (double)wF * (meanB - meanF) * (meanB - meanF);
+                double betweenVariance = wB * wF * Math.Pow(mB - mF, 2);
 
-                if (varBetween > varMax)
+                if (betweenVariance > maxVariance)
                 {
-                    varMax = varBetween;
+                    maxVariance = betweenVariance;
                     threshold = i;
                 }
             }
 
-            // binaryzujemy obraz
-            for (int y = 0; y < heightInPixels; y++)
-            {
-                byte* currentLine = ptrFirstPixel + (y * bitmapData.Stride);
-                for (int x = 0; x < widthInBytes; x = x + pixelSize)
-                {
-                    int pixelValue = currentLine[x];
-                    byte newPixelValue = (byte)((pixelValue > threshold) ? 255 : 0);
-                    currentLine[x] = newPixelValue;
-                    currentLine[x + 1] = newPixelValue;
-                    currentLine[x + 2] = newPixelValue;
-                }
-            }
-
-            // zwalniamy zasoby
-            image.UnlockBits(bitmapData);
-
-            return image;
+            return threshold;
         }
 
 
-    }
-}
+
+        }
+        }

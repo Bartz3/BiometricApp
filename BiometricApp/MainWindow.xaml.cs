@@ -37,9 +37,7 @@ namespace BiometricApp
 
             //MainImage.Source = bitmapImage;
 
-            MainChart.Plot.XLabel("Poziom");
-            MainChart.Plot.YLabel("Częstość");
-
+ 
 
         }
 
@@ -47,29 +45,26 @@ namespace BiometricApp
         private void SaveImage(object sender, RoutedEventArgs e)
         {
          
-            if (MainImage.Source != null)
+            if (ProcessedImage.Source != null)
             {
                 var saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Filter = "PNG Image|*.png";
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     var encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create((BitmapSource)MainImage.Source));
+                    encoder.Frames.Add(BitmapFrame.Create((BitmapSource)ProcessedImage.Source));
                     using (var fileStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
                     {
                         encoder.Save(fileStream);
                     }
                 }
             }
+            else { MessageBox.Show("Brak obrazka do zapisania!"); }
 
         }
         private void ShowBinaryMenu_Click(object sender, RoutedEventArgs e)
         {
             BinaryGrid.Visibility = Visibility.Visible;
-            //foreach(var item in optionsGrid.Children)
-            //{
-            //    item
-            //}
         }
 
         private void OpenImage(object sender, RoutedEventArgs e)
@@ -86,8 +81,7 @@ namespace BiometricApp
                 bitmap=HelperMethods.BitmapImageToBitmap(bi);
                 defaultImage = MainImage.Source;
                 ProcessedImage.Source=MainImage.Source;
-
-                
+           
             }
         }
 
@@ -106,46 +100,39 @@ namespace BiometricApp
                 bool useGreenChannel = GreenChannelRadioButton.IsChecked ?? false;
                 bool useBlueChannel = BlueChannelRadioButton.IsChecked ?? false;
                 bool grayscaleChannel = GrayscaleChannelRadioButton.IsChecked ?? false;
-
                 for (int i = 0; i < pixels.Length; i += 4)
                 {
                     byte gray = (byte)((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3.0);
 
                     if (useRedChannel)
                     {
-                        pixels[i] = (gray > thresholdValue) ? (byte)255 : (byte)0;
-                        pixels[i + 1] = pixels[i + 2] = thresholdValue;
+                        byte red = (gray > thresholdValue) ? (byte)255 : (byte)0;
+                        pixels[i] = red;
                     }
 
                     if (useGreenChannel)
                     {
-
-                        pixels[i + 1] = (gray > thresholdValue) ? (byte)255 : (byte)0;
-                        pixels[i + 2] = pixels[i] = thresholdValue;
+                        byte green = (gray > thresholdValue) ? (byte)255 : (byte)0;
+                        pixels[i + 1] = green;
                     }
 
                     if (useBlueChannel)
                     {
-                        pixels[i + 2] = (gray > thresholdValue) ? (byte)255 : (byte)0;
-                        pixels[i + 1] = pixels[i] = thresholdValue;
+                        byte blue = (gray > thresholdValue) ? (byte)255 : (byte)0;
+                        pixels[i + 2] = blue;
                     }
+
                     if (grayscaleChannel)
                     {
-                        byte r = pixels[i + 0];
-                        byte g = pixels[i + 1];
-                        byte b = pixels[i + 2];
+                        byte mean = (byte)((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3);
 
-                        byte mean = (byte)((r + g + b) / 3);
+                        byte grayscale = (mean > thresholdValue) ? byte.MaxValue : byte.MinValue;
 
-                        pixels[i + 0] =
-                        pixels[i + 1] =
-                        pixels[i + 2] = mean > thresholdValue ? byte.MaxValue : byte.MinValue;
+                        pixels[i] = pixels[i + 1] = pixels[i + 2] = grayscale;
                     }
-
 
                     pixels[i + 3] = 255; // Alpha channel
                 }
-
 
                 BitmapSource bitmapSource2 = BitmapSource.Create(formatConvertedBitmap.PixelWidth, formatConvertedBitmap.PixelHeight, 96, 96, PixelFormats.Pbgra32, null, pixels, formatConvertedBitmap.PixelWidth * 4);
                 ProcessedImage.Source = bitmapSource2;
@@ -153,25 +140,23 @@ namespace BiometricApp
         }
 
 
-        public int[] ComputeHistogram(Bitmap image)
-        {
-            int[] histogram = new int[256];
+        //public int[] ComputeHistogram(Bitmap image)
+        //{
+        //    int[] histogram = new int[256];
 
+        //    // Przejdź przez każdy piksel obrazu i zwiększ licznik odpowiadający jego wartości
+        //    for (int x = 0; x < image.Width; x++)
+        //    {
+        //        for (int y = 0; y < image.Height; y++)
+        //        {
+        //            System.Drawing.Color color = image.GetPixel(x, y);
+        //            int grayValue = (int)(( color.R +color.G + color.B))/3;
+        //            histogram[grayValue]++;
+        //        }
+        //    }
 
-
-            // Przejdź przez każdy piksel obrazu i zwiększ licznik odpowiadający jego wartości
-            for (int x = 0; x < image.Width; x++)
-            {
-                for (int y = 0; y < image.Height; y++)
-                {
-                    System.Drawing.Color color = image.GetPixel(x, y);
-                    int grayValue = (int)(( color.R +color.G + color.B))/3;
-                    histogram[grayValue]++;
-                }
-            }
-
-            return histogram;
-        }
+        //    return histogram;
+        //}
 
 
 
@@ -195,94 +180,43 @@ namespace BiometricApp
                 for (int i = 0; i < pixels.Length; i += 4)
                 {
 
-                    grayValue= (pixels[i] + pixels[i + 1] + pixels[i+2] )/3;
-                    histogramData[grayValue]++;
 
-                    //byte channelValue = 0;
-                    //if (useRedChannel)
-                    //{
-                    //    channelValue = pixels[i];
-                    //}
+                    //grayValue= (pixels[i] + pixels[i + 1] + pixels[i+2] )/3;
+                    //histogramData[grayValue]++;
 
-                    //if (useGreenChannel)
-                    //{
-                    //    channelValue = pixels[i + 1];
-                    //}
+                    byte channelValue = 0;
+                    if (useRedChannel)
+                    {
+                        byte red = pixels[i];
+                        histogramData[red]++;
+                    }
 
-                    //if (useBlueChannel)
-                    //{
-                    //    channelValue = pixels[i + 2];
-                    //}
+                    if (useGreenChannel)
+                    {
+                        byte green = pixels[i+1];
+                        histogramData[green]++;
+                    }
 
-                    //if (grayscaleChannel)
-                    //{
-                    //    byte r = pixels[i + 0];
-                    //    byte g = pixels[i + 1];
-                    //    byte b = pixels[i + 2];
+                    if (useBlueChannel)
+                    {
+                        byte blue = pixels[i + 2];
+                        histogramData[blue]++;
+                    }
 
-                    //    byte mean = (byte)((r + g + b) / 3);
+                    if (grayscaleChannel)
+                    {
+                        byte r = pixels[i + 0];
+                        byte g = pixels[i + 1];
+                        byte b = pixels[i + 2];
 
-                    //    channelValue = mean;
-                    //}
+                        byte gray = (byte)((r + g + b) / 3.0);
 
-                    //histogramData[channelValue]++;
-                }
-            #region
-            //DisplayHistogram(histogramData);
-            //StringBuilder histogramBuilder = new StringBuilder();
-            //for (int i = 0; i < 256; i++)
-            //{
-            //    if (i % 20 == 0)
-            //    {
-            //        histogramBuilder.Append("\n");
-            //    }
-            //    histogramBuilder.AppendFormat("{0}: {1} ", i, histogramData[i]);
-            //}
+                        histogramData[gray]++;
+                    }
 
-            //PlotModel histogramPlot = new PlotModel();
-
-            ////create histogram series
-            ////create histogram series
-            //HistogramSeries histogramSeries = new HistogramSeries();
-            ////histogramSeries.XAxisKey = histogramData;
-            //histogramSeries.ItemsSource = histogramData;
-            //histogramSeries.StrokeThickness = 1;
-            //histogramSeries.StrokeColor = OxyColors.Blue;
-            //histogramSeries.Title = "Histogram";
-
-            //// create new window
-            //Window histogramWindow = new Window();
-            //histogramWindow.Title = "Histogram";
-            //histogramWindow.Width = 800;
-            //histogramWindow.Height = 600;
-
-            //// create plot model and add histogram series
-            //PlotModel plotModel = new PlotModel();
-            //plotModel.Series.Add(histogramSeries);
-
-            //// create plot view and set plot model
-            //PlotView plotView = new PlotView();
-            //plotView.Model = plotModel;
-
-            //// add plot view to window content
-            //histogramWindow.Content = plotView;
-            //histogramWindow.ShowDialog();
-
-            // show window
-            #endregion
-
-
-            double[] dataX = new double[256];
-                for (int i = 0; i < 256; i++)
-                {
-                    dataX[i] = i;
                 }
 
-                
-                
-                MainChart.Plot.AddScatterStep(dataX, histogramData);
-                
-                MainChart.Refresh();
+                HelperMethods.DrawHistogram(MainChart, histogramData);
 
             }
             else
@@ -290,9 +224,28 @@ namespace BiometricApp
                 MessageBox.Show("Brak obrazu!");
             }
         }
+
+        
         private void StreatchHistogram(object sender, RoutedEventArgs e)
         {
-            Bitmap streachedBitmap = HistogramOperations.StretchingHistogram(bitmap);
+
+            //Oblicz histogram
+           var red = new int[256];
+           var green = new int[256];
+           var blue = new int[256];
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    System.Drawing.Color pixel = bitmap.GetPixel(x, y);
+                    red[pixel.R]++;
+                    green[pixel.G]++;
+                    blue[pixel.B]++;
+                }
+            }
+
+
+            Bitmap streachedBitmap = HistogramOperations.StretchingHistogram(bitmap,red,green,blue);
 
             using (MemoryStream memoryStream = new MemoryStream())
             {
@@ -313,7 +266,23 @@ namespace BiometricApp
         }
         private void EqualizeHistogram(object sender, RoutedEventArgs e)
         {
-            Bitmap streachedBitmap = HistogramOperations.HistogramEqualization(bitmap);
+
+          var red = new int[256];
+          var green = new int[256];
+          var blue = new int[256];
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    System.Drawing.Color pixel = bitmap.GetPixel(x, y);
+                    red[pixel.R]++;
+                    green[pixel.G]++;
+                    blue[pixel.B]++;
+                }
+            }
+
+
+            Bitmap streachedBitmap = HistogramOperations.HistogramEqualization(bitmap,red,green,blue);
 
             using (MemoryStream memoryStream = new MemoryStream())
             {

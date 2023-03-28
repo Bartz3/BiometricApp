@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ScottPlot;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -40,7 +41,25 @@ namespace BiometricApp
             WriteableBitmap writeable = new WriteableBitmap(bmpDecoder.Frames.Single());
             writeable.Freeze();
 
+
             return writeable;
+        }
+
+        public static void DrawHistogram(WpfPlot plot, double[] histogramData)
+        {
+            plot.Plot.XLabel("Poziom");
+            plot.Plot.YLabel("Częstość");
+
+            double[] dataX = new double[256];
+            for (int i = 0; i < 256; i++)
+            {
+                dataX[i] = i;
+            }
+
+            //MainChart.Plot.AddClevelandDot(dataX, histogramData);
+            plot.Plot.AddLollipop(histogramData, dataX);
+
+            plot.Refresh();
         }
 
     }

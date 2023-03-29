@@ -210,43 +210,39 @@ namespace BiometricApp
         }
 
         // Funkcja pomocnicza do obliczenia wartości progu algorytmem Otsu
-        private static int ComputeThreshold(int[] histogram, int totalPixels)
-        {
-            double sum = 0;
+        private static int ComputeThreshold(int[] histogramInt, int totalPixels)
+        {   
+            double[] histogram = histogramInt.Select(x => (double)x).ToArray();
+            int size = totalPixels;
             for (int i = 0; i < 256; i++)
             {
-                sum += i * histogram[i];
+                histogram[i] = histogram[i] / size;
             }
 
-            double sumB = 0;
-            int wB = 0;
-            int wF = 0;
-
-            double maxVariance = 0;
-            int threshold = 0;
-
+            double avgValue = 0;
             for (int i = 0; i < 256; i++)
             {
-                wB += histogram[i];
-                if (wB == 0) continue;
+                avgValue += i * histogram[i];  
+            }
 
-                wF = totalPixels - wB;
-                if (wF == 0) break;
-
-                sumB += i * histogram[i];
-                double mB = sumB / wB;
-                double mF = (sum - sumB) / wF;
-
-                double betweenVariance = wB * wF * Math.Pow(mB - mF, 2);
-
-                if (betweenVariance > maxVariance)
+            int threshold = 0;
+            double maxVariance = 0;
+            double w = 0, u = 0;
+            for (int i = 0; i < 256; i++)
+            {
+                w += histogram[i];  
+                u += i * histogram[i];
+                double t = avgValue * w - u;
+                double variance = t * t / (w * (1 - w));
+                
+                if (variance > maxVariance)
                 {
-                    maxVariance = betweenVariance;
+                    maxVariance = variance;
                     threshold = i;
                 }
             }
 
-            return threshold;
+            return (byte)threshold;
         }
 
     }
